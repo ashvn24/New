@@ -1,18 +1,11 @@
-#########
-
-__author__ = "Mohammed Shokr <mohammedshokr2014@gmail.com>"
-__version__ = "v 0.1"
-
-"""
-JARVIS:
-- Control windows programs with your voice
-"""
 
 # import modules
+import base64
+import openai
 import subprocess  # subprocess module allows you to spawn new processes
 from datetime import datetime
 # master
-import pyjokes # for generating random jokes
+import pyjokes  # for generating random jokes
 import requests
 import json
 from PIL import Image, ImageGrab
@@ -30,16 +23,17 @@ from playsound3 import playsound  # for sound output
 # auto install for pyttsx3 and speechRecognition
 import os
 try:
-    import pyttsx3 #Check if already installed
-except:# If not installed give exception
-    os.system('pip install pyttsx3')#install at run time
-    import pyttsx3 #import again for speak function
+    import pyttsx3  # Check if already installed
+except:  # If not installed give exception
+    os.system('pip install pyttsx3')  # install at run time
+    import pyttsx3  # import again for speak function
 
-try :
+try:
     import speech_recognition as sr
 except:
     os.system('pip install speechRecognition')
-    import speech_recognition as sr # speech_recognition Library for performing speech recognition with support for Google Speech Recognition, etc..
+    # speech_recognition Library for performing speech recognition with support for Google Speech Recognition, etc..
+    import speech_recognition as sr
 
 # importing the pyttsx3 library
 import webbrowser
@@ -58,6 +52,22 @@ def speak(audio):
     engine.runAndWait()
 
 
+def listen_for_command():
+    r = sr.Recognizer()
+    with sr.Microphone() as source:
+        print("Listening...")
+        audio = r.listen(source)
+
+    try:
+        command = r.recognize_google(audio).lower()
+        print(f"You said: {command}")
+        return command
+    except sr.UnknownValueError:
+        print("Could not understand audio")
+    except sr.RequestError as e:
+        print(f"Error: {e}")
+
+
 def speak_news():
     url = "http://newsapi.org/v2/top-headlines?sources=the-times-of-india&apiKey=049055d21ef24698817d7601b26f5eda"
     news = requests.get(url).text
@@ -67,39 +77,46 @@ def speak_news():
     speak("Todays Headlines are..")
     for index, articles in enumerate(arts):
         speak(articles["title"])
+        if listen_for_command() == "enough":
+            print("Exiting news headlines...")
+            break
         if index == len(arts) - 1:
             break
-        speak("Moving on the next news headline..")
-    speak("These were the top headlines, Have a nice day Sir!!..")
+        speak("Moving on to the next news headline...")
+    speak("These were the top headlines, Have a nice day Sir!!")
 
 
 def sendEmail(to, content):
     server = smtplib.SMTP("smtp.gmail.com", 587)
     server.ehlo()
     server.starttls()
-    server.login("youremail@gmail.com", "yourr-password-here")
-    server.sendmail("youremail@gmail.com", to, content)
+    server.login("ashwinvk77@gmail.com", "ktsg khti mimn zphi")
+    server.sendmail("ashwinvk77@gmail.com", to, content)
     server.close()
 
-import openai
-import base64 
-stab=(base64.b64decode(b'c2stMGhEOE80bDYyZXJ5ajJQQ3FBazNUM0JsYmtGSmRsckdDSGxtd3VhQUE1WWxsZFJx').decode("utf-8"))
-api_key = stab
+
+# stab = (base64.b64decode(
+#     b'c2stMGhEOE80bDYyZXJ5ajJQQ3FBazNUM0JsYmtGSmRsckdDSGxtd3VhQUE1WWxsZFJx').decode("utf-8"))
+# api_key = stab
+
+
 def ask_gpt3(que):
-    openai.api_key = 'sk-proj-D0eYieRgozDn8I2R5Yt5T3BlbkFJjS15aKUdOfNx5BzdqwEK'
-
-    response = openai.Completion.create(
-        model="gpt-3.5-turbo", 
-        messages=f"Answer the following question: {que}\n",
-        max_tokens=150,  
-        n = 1, 
-        stop=None,  
-        stream=True,
-        temperature=0.7  
-    )
-
-    answer = response.choices[0].text.strip()
-    return answer
+    try:
+        openai.api_key = 'sk-proj-G4XDc3VC3e3hv8ooaNGLT3BlbkFJKRgTm00kRblD40fhFsRS'
+        response = openai.Completion.create(
+            model="gpt-3.5-turbo",
+            messages=f"Answer the following question: {que}\n",
+            max_tokens=150,
+            n=1,
+            stop=None,
+            stream=True,
+            temperature=0.7
+        )
+        answer = response.choices[0].text.strip()
+        return answer
+    except openai.error.RateLimitError as e:
+        speak(f"sorry, your limit reached for today")
+        return
 
 def wishme():
     # This function wishes user
@@ -128,8 +145,8 @@ def takecommand():
         query = r.recognize_google(audio, language="en-in")
         print(f"User said {query}\n")
     except Exception as e:
-        print("Say that again please...")
-        takecommand()
+        speak("Sorry, I didn't catch you")
+        query = takecommand()
     return query
 
 
@@ -163,56 +180,8 @@ def on_release(key):
     if key == Key.esc():
         # Stop listener
         return False
-    """
-class Jarvis:
-    def __init__(self, Q):
-        self.query = Q
+    
 
-    def sub_call(self, exe_file):
-        '''
-        This method can directly use call method of subprocess module and according to the
-        argument(exe_file) passed it returns the output.
-
-        exe_file:- must pass the exe file name as str object type.
-
-        '''
-        return subprocess.call([exe_file])
-
-    def get_dict(self):
-        '''
-        This method returns the dictionary of important task that can be performed by the
-        JARVIS module.
-
-        Later on this can also be used by the user itself to add or update their preferred apps.
-        '''
-        _dict = dict(
-            time=datetime.now(),
-            notepad='Notepad.exe',
-            calculator='calc.exe',
-            stickynot='StickyNot.exe',
-            shell='powershell.exe',
-            paint='mspaint.exe',
-            cmd='cmd.exe',
-            browser='C:\\Program Files\\Internet Explorer\\iexplore.exe',
-        )
-        return _dict
-
-    @property
-    def get_app(self):
-        task_dict = self.get_dict()
-        task = task_dict.get(self.query, None)
-        if task is None:
-            engine.say("Sorry Try Again")
-            engine.runAndWait()
-        else:
-            if 'exe' in str(task):
-                return self.sub_call(task)
-            print(task)
-            return
-
-
-# =======
-"""
 
 def get_app(Q):
     current = Controller()
@@ -240,6 +209,8 @@ def get_app(Q):
         subprocess.call(["discord.exe"])
     elif Q == "open browser":
         subprocess.call(["C:\\Program Files\\Internet Explorer\\iexplore.exe"])
+    elif Q == "open vs code":
+        subprocess.call(["C:\\Program Files\\Internet Explorer\\iexplore.exe"])
     # patch-1
     elif Q == "open youtube":
         webbrowser.open("https://www.youtube.com/")  # open youtube
@@ -248,11 +219,11 @@ def get_app(Q):
     elif Q == "open github":
         webbrowser.open("https://github.com/")
     elif Q == "search for":
-        que=Q.lstrip("search for")
+        que = Q.lstrip("search for")
         answer = ask_gpt3(que)
-        
+
     elif (
-        Q == "email to other"
+        Q == "send mail"
     ):  # here you want to change and input your mail and password whenver you implement
         try:
             speak("What should I say?")
@@ -260,9 +231,14 @@ def get_app(Q):
             with sr.Microphone() as source:
                 print("Listening...")
                 r.pause_threshold = 1
-                audio = r.listen(source)
-            to = "abc@gmail.com"
-            content = input("Enter content")
+                content = r.listen(source)
+            speak("to whom should i mail?")
+            r = sr.Recognizer()
+            with sr.Microphone() as source:
+                print("Listening...")
+                r.pause_threshold = 1
+                to = r.listen(source)
+            # content = input("Enter content")
             sendEmail(to, content)
             speak("Email has been sent!")
         except Exception as e:
@@ -270,14 +246,22 @@ def get_app(Q):
             speak("Sorry, I can't send the email.")
     # =======
     #   master
-    elif Q == "Take screenshot":
+    
+    elif Q == "take screenshot":
+        desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+        
         snapshot = ImageGrab.grab()
-        drive_letter = "C:\\"
         folder_name = r"downloaded-files"
-        folder_time = datetime.datetime.now().strftime("%Y-%m-%d_%I-%M-%S_%p")
+        folder_time = datetime.now().strftime("%Y-%m-%d_%I-%M-%S_%p")
         extention = ".jpg"
-        folder_to_save_files = drive_letter + folder_name + folder_time + extention
-        snapshot.save(folder_to_save_files)
+        folder_to_save_files = folder_name + folder_time + extention
+        folder_path = os.path.join(desktop_path, folder_name)
+        os.makedirs(folder_path, exist_ok=True)
+
+        # Save the screenshot to the "downloaded-files" folder
+        file_path = os.path.join(folder_path, folder_to_save_files)
+        snapshot.save(file_path)
+        speak("screen shot saved")
 
     elif Q == "Jokes":
         speak(pyjokes.get_joke())
@@ -296,24 +280,12 @@ def get_app(Q):
         with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
             listener.join()
     elif Q == "take a break":
+        speak("Thank you")
         exit()
     else:
         answer = ask_gpt3(Q)
 
-    # master
-
-    apps = {
-        "time": datetime.now(),
-        "notepad": "Notepad.exe",
-        "calculator": "calc.exe",
-        "stikynot": "StikyNot.exe",
-        "shell": "powershell.exe",
-        "paint": "mspaint.exe",
-        "cmd": "cmd.exe",
-        "browser": "C:\\Program Files\Internet Explorer\iexplore.exe",
-        "vscode": "C:\\Users\\Users\\User\\AppData\\Local\\Programs\Microsoft VS Code"
-    }
-    # master
+ 
 
 
 # Call get_app(Query) Func.
