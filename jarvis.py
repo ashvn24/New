@@ -11,7 +11,6 @@ import json
 from PIL import Image, ImageGrab
 from gtts import gTTS
 
-# for 30 seconds clip "Jarvis, clip that!" and discord ctrl+k quick-move (might not come to fruition)
 from pynput import keyboard
 from pynput.keyboard import Key, Listener
 from pynput.mouse import Button, Controller
